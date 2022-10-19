@@ -10,6 +10,9 @@ public class AddressBookDirectory implements AddressBookDirectoryIF{
     Scanner scannerObject=new Scanner(System.in);
     Map<String,AddressBook> addressBookDirectory=new HashMap<String ,AddressBook>();
 
+    public enum IOService{
+        CONSOLE_IO,FILE_IO,DB_IO,REST_IO
+    }
 
     @Override
     public void operationDirectory() {

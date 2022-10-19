@@ -1,7 +1,17 @@
 package com.bridgeLabz;
 
+import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
+import com.opencsv.bean.StatefulBeanToCsv;
+import com.opencsv.bean.StatefulBeanToCsvBuilder;
+import com.opencsv.exceptions.CsvDataTypeMismatchException;
+import com.opencsv.exceptions.CsvException;
+import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
+
 import java.io.File;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -14,7 +24,7 @@ public class AddressBook implements AddressBookIF {
     public static HashMap<String, ArrayList<ContactPerson>> personByState = new HashMap<>();
     public String addressBookName;
     public boolean isPresent = false;
-
+private static final String LIST_SAMPLE="./list-sample.csv";
     public String getAddressBookName() {
         return addressBookName;
     }
@@ -38,8 +48,10 @@ public class AddressBook implements AddressBookIF {
                     3.Delete Contact
                     4.Display Address Book
                     5.Display Sorted Address Book By Custom Criteria
-                    6. Write To File
-                    7.Read From File""");
+                    6.Write To File
+                    7.Read From File
+                    8.Write To Open CSV File
+                    9.Read From Open CSV File""");
             switch (scannerObject.nextInt()) {
                 case 1 -> addContact();
                 case 2 -> editPerson();
@@ -60,6 +72,26 @@ public class AddressBook implements AddressBookIF {
                     System.out.println("Reading From File");
                 }
                 case 8 -> {
+                    try {
+                        writeToAddressBookCSVFile();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (CsvDataTypeMismatchException e) {
+                        throw new RuntimeException(e);
+                    } catch (CsvRequiredFieldEmptyException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Writing To Open CSV File");
+                }
+                case 9-> {
+                    try {
+                        readFromAddressBookCSVFile();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println("Reading From Open CSV File");
+                }
+                case 10 -> {
                     moreChanges = false;
                     System.out.println("Exiting Address Book:" + this.getAddressBookName() + " !");
                 }
@@ -262,5 +294,45 @@ public void printSortedList(List<ContactPerson> sortedContactList) {
         }catch (IOException e) {
             e.printStackTrace();
         }return addressBookList;
+    }
+    private void writeToAddressBookCSVFile()throws IOException, CsvDataTypeMismatchException, CsvRequiredFieldEmptyException {
+
+        try (
+         Writer  writer = Files.newBufferedWriter(Paths.get(LIST_SAMPLE));
+        ){
+
+            StatefulBeanToCsv beanToCsv = new StatefulBeanToCsvBuilder(writer)
+                    .withQuotechar(CSVWriter.NO_QUOTE_CHARACTER).build();
+            List<AddressBookDirectory> addressBookDirectories= new ArrayList<>();
+            addressBookDirectories.add(new AddressBookDirectory());
+
+            beanToCsv.write(addressBookDirectories);
+
+        }
+
+    }
+
+    public void readFromAddressBookCSVFile() throws IOException {
+        try(
+                Reader reader = Files.newBufferedReader(Paths.get(LIST_SAMPLE));
+                CSVReader csvReader = new CSVReader(reader);
+        ){
+            List<String[]> records = csvReader.readAll();
+
+            for (String[] record : records){
+                System.out.println("BookName: "+record[0]);
+                System.out.println("FirstName: "+record[1]);
+                System.out.println("LastName: "+record[2]);
+                System.out.println("City: "+record[3]);
+                System.out.println("Email: "+record[4]);
+                System.out.println("PhoneNo: "+record[5]);
+                System.out.println("State: "+record[6]);
+                System.out.println("Zip: "+record[7]);
+                System.out.println("Address: "+record[8]);
+                System.out.println("======================");
+            }
+        } catch (CsvException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

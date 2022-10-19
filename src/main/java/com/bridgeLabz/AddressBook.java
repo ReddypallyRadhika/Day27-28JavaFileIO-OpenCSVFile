@@ -1,17 +1,17 @@
 package com.bridgeLabz;
 
+import com.google.gson.Gson;
 import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
+import com.opencsv.bean.CsvToBean;
+import com.opencsv.bean.CsvToBeanBuilder;
 import com.opencsv.bean.StatefulBeanToCsv;
 import com.opencsv.bean.StatefulBeanToCsvBuilder;
 import com.opencsv.exceptions.CsvDataTypeMismatchException;
 import com.opencsv.exceptions.CsvException;
 import com.opencsv.exceptions.CsvRequiredFieldEmptyException;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Reader;
-import java.io.Writer;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.*;
@@ -24,7 +24,8 @@ public class AddressBook implements AddressBookIF {
     public static HashMap<String, ArrayList<ContactPerson>> personByState = new HashMap<>();
     public String addressBookName;
     public boolean isPresent = false;
-private static final String LIST_SAMPLE="./list-sample.csv";
+    private static final String LIST_SAMPLE="./list-sample.csv";
+    private static final String LIST_SAMPLE1="./list-sample.json";
     public String getAddressBookName() {
         return addressBookName;
     }
@@ -51,7 +52,8 @@ private static final String LIST_SAMPLE="./list-sample.csv";
                     6.Write To File
                     7.Read From File
                     8.Write To Open CSV File
-                    9.Read From Open CSV File""");
+                    9.Read From Open CSV File
+                    10.Read From Json File""");
             switch (scannerObject.nextInt()) {
                 case 1 -> addContact();
                 case 2 -> editPerson();
@@ -91,7 +93,11 @@ private static final String LIST_SAMPLE="./list-sample.csv";
                     }
                     System.out.println("Reading From Open CSV File");
                 }
-                case 10 -> {
+                case 10-> {
+                    JSonReaderAndWriter();
+                    System.out.println("Reading From Open CSV File");
+                }
+                case 11 -> {
                     moreChanges = false;
                     System.out.println("Exiting Address Book:" + this.getAddressBookName() + " !");
                 }
@@ -320,7 +326,7 @@ public void printSortedList(List<ContactPerson> sortedContactList) {
             List<String[]> records = csvReader.readAll();
 
             for (String[] record : records){
-                System.out.println("BookName: "+record[0]);
+                System.out.println("ADDRESSBookName: "+record[0]);
                 System.out.println("FirstName: "+record[1]);
                 System.out.println("LastName: "+record[2]);
                 System.out.println("City: "+record[3]);
@@ -333,6 +339,26 @@ public void printSortedList(List<ContactPerson> sortedContactList) {
             }
         } catch (CsvException e) {
             throw new RuntimeException(e);
+        }
+    }
+    public void JSonReaderAndWriter(){
+        try{
+            Reader reader=Files.newBufferedReader(Paths.get(LIST_SAMPLE1));
+            CsvToBeanBuilder<ContactPerson> csvToBeanBuilder=new CsvToBeanBuilder<>(reader);
+            csvToBeanBuilder.withType(ContactPerson.class);
+            csvToBeanBuilder.withIgnoreLeadingWhiteSpace(true);
+            CsvToBean<ContactPerson> csvToBean=csvToBeanBuilder.build();
+            List<ContactPerson> contactPeople=csvToBean.parse();
+            Gson gson =new Gson();
+            String json=gson.toJson(contactPeople);
+            FileWriter writer=new FileWriter(LIST_SAMPLE1);
+            writer.write(json);
+            writer.close();
+            BufferedReader bufferedReader=new BufferedReader(new FileReader(LIST_SAMPLE1));
+            ContactPerson[] contactPeople1=gson.fromJson(bufferedReader, ContactPerson[].class);
+            List<ContactPerson> csvUserList=Arrays.asList(contactPeople1);
+        }catch (IOException e){
+            e.printStackTrace();
         }
     }
 }
